@@ -14,8 +14,7 @@ year.end <- 2007 # including forecating
 # time step option
 # 1 15 days, ie two values per month
 # 2 5 days, leap year, 29th february data suppressed
-# 3 dayly, could take several days to run if time series long, and autocorrelation included
-time.step <- 2
+time.step <- 1
 
 # data already given according to time step chosen ?
 data.formatted <- 0 # 0 no, 1 yes
@@ -29,15 +28,3 @@ require(rjags)
 
 # data formatting
 #source('1.data.formating.r')
-
-
-
-
-
-
-
-
-
-
-
-
