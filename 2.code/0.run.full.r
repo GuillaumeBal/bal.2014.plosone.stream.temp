@@ -8,8 +8,8 @@ setwd(wd)
 data.file <- '1.raw.data/scorff.river.data.csv'
 
 # define first and last year
-year.begin <- 1995 # including hindcasting
-year.end <- 2007 # including forecating 
+year.start <- 1990 # including hindcasting
+year.end <- 2006 # including forecating 
 
 # time step option
 # 1 15 days, ie two values per month
@@ -27,4 +27,7 @@ require(lubridate)
 require(rjags)
 
 # data formatting
-#source('1.data.formating.r')
+source('1.data.formatting.r')
+
+# find shift parameters of time series
+source('shift.estimates.r')
