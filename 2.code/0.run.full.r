@@ -14,20 +14,26 @@ year.end <- 2006 # including forecating
 # time step option
 # 1 15 days, ie two values per month
 # 2 5 days, leap year, 29th february data suppressed
-time.step <- 1
+time.step.option <- 1
 
 # data already given according to time step chosen ?
 data.formatted <- 0 # 0 no, 1 yes
 
-# model autocorrelation in residual (theloger the time step the less likely)
+# model autocorrelation in residual (the longer the time step the less likely)
 autocor.incl <- 0 # 0 for no, 1 for yes
+
+# mcmc param first model
+mcmc.burn.1 <- as.integer(2000)
+mcmc.length.1 <- as.integer(4000)  
+mcmc.thin.1 = 5
+mcmc.chains.1 = 3 # needs
 
 # list of packages required
 require(lubridate)
-require(rjags)
+require(R2jags)
 
 # data formatting
-source('1.data.formatting.r')
+if(data.formatted == 0) source('1.data.formatting.r')
 
 # find shift parameters of time series
-source('shift.estimates.r')
+source('2.run.ts.shift.model.r')

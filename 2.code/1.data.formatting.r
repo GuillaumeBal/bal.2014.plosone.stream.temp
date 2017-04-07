@@ -20,7 +20,7 @@ day.data <- yday(raw.data$date)
 day.index <- seq(1, dim(raw.data)[1])
 
 # formatting for 15 days time period
-if(time.step == 1){
+if(time.step.option == 1){
   
   # series of dates used for calculating means
   cut.off.dates.1 <- as.vector(by(day.index, INDICES = list(month.data, year.data), FUN = min))   
@@ -84,7 +84,16 @@ if(time.step == 1){
   
 }
 
-par(mfrow = c(3, 1))
-plot(wt.data, type = 'l')
+# some more indices
+time.steps.1 <- seq(1, length(wt.data), 1)
+n.time.steps.1 <- length(time.steps.1)
+n.time.steps.year.1 <- ifelse(time.step.option == 1, 24, 73)
+pi.value <- pi
+
+# plot data used
+par(mfrow = c(3, 1),
+    mar = c(2, 4, 2, 2),
+    oma = c(1, .5, 0.5, .5))
+plot(wt.data, type = 'l', main = 'Used data')
 plot(at.data, type = 'l')
 plot(lfl.data, type = 'l')
