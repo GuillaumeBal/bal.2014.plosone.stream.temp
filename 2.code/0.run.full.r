@@ -9,7 +9,8 @@ data.file <- '1.raw.data/scorff.river.data.csv'
 
 # define first and last year
 year.start <- 1990 # including hindcasting
-year.end <- 2006 # including forecating 
+year.end <- 2006 # year end of historical data
+year.end.forecast <- 2006 # including forecating, option in case simulated air data might bias estiamtes somehow, set to same as year.end is no reason
 
 # time step option
 # 1 15 days, ie two values per month
@@ -28,12 +29,21 @@ mcmc.length.1 <- as.integer(4000)
 mcmc.thin.1 = 5
 mcmc.chains.1 = 3 # needs
 
+# mcmc param first model
+mcmc.burn.2 <- as.integer(3000)
+mcmc.length.2 <- as.integer(6000)  
+mcmc.thin.2 = 5
+mcmc.chains.2 = 3 # needs
+
 # list of packages required
 require(lubridate)
 require(R2jags)
 
 # data formatting
-if(data.formatted == 0) source('1.data.formatting.r')
+#if(data.formatted == 0) source('1.data.formatting.base.r')
 
 # find shift parameters of time series
-source('2.run.ts.shift.model.r')
+#source('2.run.ts.shift.model.r')
+rm(list = ls()[!ls() %in% c('wd', 
+                            'year.start', 'year.end', 'year.end.forecast',
+                            'mcmc.burn.2', 'mcmc.length.2', 'mcmc.thin.2', 'mcmc.chains.2')])

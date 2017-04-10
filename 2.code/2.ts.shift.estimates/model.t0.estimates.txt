@@ -10,7 +10,7 @@ for(t in 1:n.time.steps.1){
 }
 alpha.wt ~ dunif(5, 25)
 beta.wt ~ dunif(2, 14)
-t0.wt ~ dunif(- n.time.steps.year.1 / 2, n.time.steps.year.1 / 2)
+t0.wt ~ dunif(- n.time.steps.year.1 / 2, 0)
 tau.wt ~ dgamma(0.001, 0.001)
 sd.wt <- sqrt(1 / tau.wt)
 
@@ -21,18 +21,18 @@ for(t in 1:n.time.steps.1){
 }
 alpha.at ~ dunif(5, 25)
 beta.at ~ dunif(2, 14)
-t0.at ~ dunif(- n.time.steps.year.1 / 2, n.time.steps.year.1 / 2)
+t0.at ~ dunif(- n.time.steps.year.1 / 2, 0)
 tau.at ~ dgamma(0.001, 0.001)T(0.01, 100)
 sd.at <- sqrt(1 / tau.at)
 
-# flow sime series
+# flow sime series, '-beta.lfl' because inverse frequency compared to temp data
 for(t in 1:n.time.steps.1){
   lfl.data[t] ~ dnorm(mean.lfl[t], tau.lfl) 
-  mean.lfl[t] <- alpha.lfl + beta.lfl * sin(2 * pi.value * (t + t0.lfl) / n.time.steps.year.1)
+  mean.lfl[t] <- alpha.lfl - beta.lfl * sin(2 * pi.value * (t + t0.lfl) / n.time.steps.year.1)
 }
 alpha.lfl ~ dunif(0, 4)
 beta.lfl ~ dunif(0.1, 4)
-t0.lfl ~ dunif(- n.time.steps.year.1 / 2, n.time.steps.year.1 / 2)
+t0.lfl ~ dunif(- n.time.steps.year.1 / 2, 0)
 tau.lfl ~ dgamma(0.001, 0.001)
 sd.lfl <- sqrt(1 / tau.lfl)
 

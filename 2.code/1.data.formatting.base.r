@@ -97,3 +97,7 @@ par(mfrow = c(3, 1),
 plot(wt.data, type = 'l', main = 'Used data')
 plot(at.data, type = 'l')
 plot(lfl.data, type = 'l')
+
+# save time series
+write.table(cbind(date = as.character(raw.data$date[cut.off.series[1:n.time.steps.1 %% 2 != 0]]), 
+                  wt.data = wt.data, at.data = at.data, lfl.data = lfl.data), 'time.series.data.1.txt')

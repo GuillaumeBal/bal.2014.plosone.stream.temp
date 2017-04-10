@@ -1,0 +1,561 @@
+################################################################################
+#                                                                              #
+#                                                                              #
+############################  MODELE INTEGRAL ##################################
+#                                                                              #
+#                                                                   27/01/2014 #
+################################################################################
+
+
+model {
+	
+################################################################################
+#                                                                              #
+#                                  AIR                                         #
+#                                                                              #
+################################################################################
+
+########################### PARTIE AJUSTEMENT  #################################
+
+# special definition first Teau because of AR1 residuals
+
+for(z in 1:n_per_100_aj){
+
+  index_mean_ampl_r_aj[z] <- index_6[seq_1_aj[z]]
+		
+  Tair[seq_1_aj[z]] ~ dnorm(mu_Tair_ac[seq_1_aj[z]], tau_Tair_aj) T(-10, 40)
+
+  mu_Tair_ac[seq_1_aj[z]] <- mu_Tair[seq_1_aj[z]] + eps_r[seq_1_aj[z]]
+
+  mu_Tair[seq_1_aj[z]] <- br[index_mean_ampl_r_aj[z]] + dr[index_mean_ampl_r_aj[z]] * sin(2 * 3.141593 * (seq_1_aj[z] + fr_aj) / 73)
+
+  eps_r[seq_1_aj[z]] <- 0 # defined to allow model to work
+
+  res_r[seq_1_aj[z]] <- Tair[seq_1_aj[z]] - mu_Tair[seq_1_aj[z]]
+
+  res_r_ac[seq_1_aj[z]] <- Tair[seq_1_aj[z]] - mu_Tair_ac[seq_1_aj[z]]
+
+# rest of Tair time serie adjusted
+	
+  for (j in seq_2_aj[z]:seq_100_aj[z]){
+
+    Tair[j] ~ dnorm(mu_Tair_ac[j], tau_Tair_ar_aj)T(-10, 40)
+
+    mu_Tair_ac[j] <- mu_Tair[j]+ eps_r[j]
+
+    mu_Tair[j] <- br[index_6[j]] + dr[index_6[j]] * sin(2 * 3.141593 * (j + fr_aj) / 73)
+
+    eps_r[j] <- rho_r_aj * res_r[j-1]
+
+    res_r[j] <- Tair[j] - mu_Tair[j]
+
+    res_r_ac[j] <- Tair[j] - mu_Tair_ac[j]
+
+  }#n
+  
+}#j  
+
+########################### PARTIE SCENARIO CC #################################
+
+for(z in 1:n_per_100_proj){
+
+  index_mean_ampl_r_proj[z] <- index_6[seq_1_proj[z]]
+
+  Tair[seq_1_proj[z]] ~ dnorm(mu_Tair_ac[seq_1_proj[z]], tau_Tair_proj) T(-10, 40)
+
+  mu_Tair_ac[seq_1_proj[z]] <- mu_Tair[seq_1_proj[z]] + 0
+
+  mu_Tair[seq_1_proj[z]] <- br[index_mean_ampl_r_proj[z]] + dr[index_mean_ampl_r_proj[z]] * sin(2 * 3.141593 * (seq_1_proj[z] + fr_proj) / 73)
+
+# rest of Tair time serie adjusted
+	
+  for (j in seq_2_proj[z]:seq_100_proj[z]){
+		
+    Tair[j] ~ dnorm(mu_Tair_ac[j], tau_Tair_ar_proj)T(-10, 40)
+
+    mu_Tair_ac[j] <- mu_Tair[j]  + rho_r_proj *(Tair[j-1] - mu_Tair[j-1])
+
+    mu_Tair[j] <- br[index_6[j]] + dr[index_6[j]] * sin(2 * 3.141593 * (j + fr_proj) / 73)    
+
+  }#n
+
+}#j  
+
+############################# PRIORS SECTION ###################################
+
+rho_r_aj ~ dunif(0, 1)
+
+rho_r_proj ~ dunif(0, 1)
+
+for (a in 1:nb6mprojtot){
+
+  br[a] ~ dnorm(13, 0.01)T(0, 26) # dnorm(br[a - 1], tau_br_aj)T(0, 26)
+
+  dr[a] ~  dnorm(6, 0.01)T(0, 12) #dnorm(dr[a - 1], tau_dr_aj)T(0, 12)
+
+  trmin[a] <- br[a] - dr[a]
+
+  trmax[a] <- br[a] + dr[a]
+
+}
+
+fr_aj ~ dunif(50, 60)
+
+fr_proj ~ dunif(50, 60)
+	
+tau_Tair_aj ~ dgamma(0.001, 0.001) T(0.01, 100)
+
+tau_Tair_proj ~ dgamma(0.001, 0.001) T(0.01, 100)
+
+s_Tair_aj <- sqrt(1 / tau_Tair_aj)
+
+s_Tair_proj <- sqrt(1 / tau_Tair_proj)
+
+tau_Tair_ar_aj <- tau_Tair_aj / (1 - pow(rho_r_aj, 2))
+
+tau_Tair_ar_proj <- tau_Tair_proj / (1 - pow(rho_r_proj, 2))
+
+################################################################################
+#####                     LDEB                                            ######
+################################################################################
+
+#### PARTIE AJUSTEMENT
+
+# special definition first Teau becasue of AR1 residuals
+
+for(z in 1:n_per_100_aj){
+
+  index_mean_ampl_d_aj[z] <- index_6[seq_1_aj[z]]
+
+  Ldeb[seq_1_aj[z]] ~ dnorm(mu_LDeb_ac[seq_1_aj[z]], tau_LDeb)T(-7, 10)
+
+  mu_LDeb_ac[seq_1_aj[z]] <- mu_LDeb[seq_1_aj[z]] + eps_d[seq_1_aj[z]]
+
+  mu_LDeb[seq_1_aj[z]] <- bd[index_mean_ampl_d_aj[z]] + dd[index_mean_ampl_d_aj[z]] * sin(2 * 3.141593 * (seq_1_aj[z] + fd) / 73)
+
+  eps_d[seq_1_aj[z]] <- 0
+
+  res_d[seq_1_aj[z]]<-LDeb[seq_1_aj[z]] - mu_LDeb[seq_1_aj[z]]
+
+  res_d_ac[seq_1_aj[z]]<-LDeb[seq_1_aj[z]] - mu_LDeb_ac[seq_1_aj[z]]
+
+  # rest of Teau time serie
+	
+  for (j in seq_2_aj[z]:seq_100_aj[z]){
+
+    LDeb[j] ~ dnorm(mu_LDeb_ac[j], tau_LDeb_ar)T(-7, 10)
+
+    mu_LDeb_ac[j] <- mu_LDeb[j] + eps_d[j]
+
+    mu_LDeb[j] <- bd[index_6[j]] + dd[index_6[j]] * sin(2 * 3.141593 * (j + fd) / 73)
+
+    eps_d[j] <- rho_d * res_d[j - 1]
+
+    res_d[j] <- LDeb[j] - mu_LDeb[j]
+
+    res_d_ac[j] <- LDeb[j] - mu_LDeb_ac[j]
+
+  }#j
+  
+}#n                             
+
+# prior Teau time serie decomposition
+	
+rho_d ~ dunif(0, 1)
+
+for (a in 1:nb6maj){
+
+  bd[a] ~ dnorm(1, 0.01)T(-3, 3)#dnorm(bd[a - 1], tau_bd)T(-3, 3)
+
+  dd[a] ~ dunif(0, 3)#dnorm(dd[a-1], tau_dd)T(-3, 3)
+  
+  debmax[a] <- bd[a] + dd[a]
+
+  debmin[a]<- bd[a] - dd[a]
+
+}
+
+fd ~ dunif(13, 23)
+	
+tau_LDeb ~ dgamma(0.01, 0.01) T(0.05, 100)
+
+s_LDeb <- sqrt(1 / tau_LDeb)
+
+tau_LDeb_ar <- tau_LDeb / (1- pow(rho_d, 2))
+
+### pred part
+
+for (a in nb6majplus1:nb6mprojtot){
+
+  bd[a]<-mean(bd[1:nb6maj])
+
+	dd[a]<-mean(dd[1:nb6maj])
+		
+	debmax[a]<-bd[a]+dd[a]
+
+  debmin[a]<-bd[a]-dd[a]
+
+}
+
+################################################################################
+####                        teau3                                            ###
+################################################################################
+
+for(z in 1:n_per_100_aj){
+
+  ### first out of the loop because of AR1 error
+
+  index_mean_ampl_03_aj[z] <- index_6[seq_1_aj[z]]
+
+  Teau3[seq_1_aj[z]] ~ dnorm(mu_Teau3_ac[seq_1_aj[z]], tau_Teau3)T(0, 40)
+
+  mu_Teau3_ac[seq_1_aj[z]] <- mu_Teau3[seq_1_aj[z]] + eps_o3[seq_1_aj[z]]
+
+  mu_Teau3[seq_1_aj[z]] <- bof[index_mean_ampl_03_aj[z]] + dof[index_mean_ampl_03_aj[z]] * sin(2 * 3.141593 * (seq_1_aj[z] + fof) / 73)
+
+  # eps and resid first time  
+  eps_o3[seq_1_aj[z]] <- 0
+
+  res_o3[seq_1_aj[z]] <- Teau3[seq_1_aj[z]] - mu_Teau3[seq_1_aj[z]]
+
+  res_o3_ac[seq_1_aj[z]] <- Teau3[seq_1_aj[z]] - mu_Teau3_ac[seq_1_aj[z]]
+
+  # replicat
+
+  Teau3rep[seq_1_aj[z]] ~ dnorm(mu_Teau3rep_ac[seq_1_aj[z]], tau_Teau3)T(0, 40)
+
+  mu_Teau3rep_ac[seq_1_aj[z]] <-  mu_Teau3rep[seq_1_aj[z]] + eps_o3rep[seq_1_aj[z]]
+
+  mu_Teau3rep[seq_1_aj[z]] <- bof[index_mean_ampl_03_aj[z]] + dof[index_mean_ampl_03_aj[z]] * sin(2 * 3.141593 * (seq_1_aj[z] + fof) / 73)
+
+  eps_o3rep[seq_1_aj[z]] <- 0
+
+  res_o3rep[seq_1_aj[z]] <- Teau3rep[seq_1_aj[z]] - mu_Teau3rep[seq_1_aj[z]]
+
+  ### loop for rest of adj period
+
+  for (j in seq_2_aj[z]:seq_100_aj[z]){
+
+    Teau3[j] ~ dnorm(mu_Teau3_ac[j], tau_Teau3_ar)T(0, 40)
+
+    mu_Teau3_ac[j] <- mu_Teau3[j] + eps_o3[j]
+
+    mu_Teau3[j] <- bof[index_6[j]] + dof[index_6[j]] * sin(2 * 3.141593 * (j + fof) / 73)
+
+    eps_o3[j] <- rho_o3 * res_o3[j - 1]
+
+    res_o3[j] <- Teau3[j] - mu_Teau3[j]
+
+    res_o3_ac[j] <- Teau3[j] - mu_Teau3_ac[j]
+
+    # replicat
+
+    Teau3rep[j] ~ dnorm(mu_Teau3rep_ac[j],tau_Teau3_ar)T(0,40)
+
+    mu_Teau3rep_ac[j] <- mu_Teau3rep[j] + eps_o3rep[j]
+
+	  mu_Teau3rep[j] <- bof[index_6[j]] + dof[index_6[j]] * sin(2 * 3.141593 * (j + fof) / 73)
+
+    eps_o3rep[j] <- rho_o3 * res_o3rep[j-1]
+
+    res_o3rep[j] <- Teau3rep[j] - mu_Teau3rep[j]
+
+  }#j    
+
+}#n
+
+############################## proj section ##############################
+
+for(z in 1:n_per_100_proj){
+
+  ### first out of the loop because of AR1 error
+
+  index_mean_ampl_03_proj[z] <- index_6[seq_1_proj[z]]
+
+  Teau3[seq_1_proj[z]] ~ dnorm(mu_Teau3_ac[seq_1_proj[z]], tau_Teau3)T(0, 40)
+
+  mu_Teau3_ac[seq_1_proj[z]] <- mu_Teau3[seq_1_proj[z]] + eps_o3[seq_1_proj[z]]
+
+  mu_Teau3[seq_1_proj[z]] <- bof[index_mean_ampl_03_proj[z]] + dof[index_mean_ampl_03_proj[z]] * sin(2 * 3.141593 * (seq_1_proj[z] + fof) / 73)
+
+  # eps and resid first time  
+  eps_o3[seq_1_proj[z]] <- 0
+
+  res_o3[seq_1_proj[z]] <- Teau3[seq_1_proj[z]] - mu_Teau3[seq_1_proj[z]]
+
+  res_o3_ac[seq_1_proj[z]] <- Teau3[seq_1_proj[z]] - mu_Teau3_ac[seq_1_proj[z]]
+
+  ### loop for rest of proj period
+
+  for (j in seq_2_proj[z]:seq_100_proj[z]){
+
+    Teau3[j] ~ dnorm(mu_Teau3_ac[j], tau_Teau3_ar)T(0, 40)
+
+    mu_Teau3_ac[j] <- mu_Teau3[j] + eps_o3[j]
+
+    mu_Teau3[j] <- bof[index_6[j]] + dof[index_6[j]] * sin(2 * 3.141593 * (j + fof) / 73)
+
+    eps_o3[j] <- rho_o3 * res_o3[j - 1]
+
+    res_o3[j] <- Teau3[j] - mu_Teau3[j]
+
+    res_o3_ac[j] <- Teau3[j] - mu_Teau3_ac[j]
+
+  }#j    
+
+}#n
+
+###################### PRIORS ############################################
+
+rho_o3 ~ dunif(0, 1)
+
+for (a in 1:nb6mprojtot){ #this loop include estimate for pred part, de
+
+#nb6mprojtot
+
+  mu_tomaxf[a] <- o + p * (trmax[a] - mean(trmax[1:nb6maj])) + q * (debmin[a] - mean(debmin[1:nb6maj]))
+
+  tomaxf[a] ~ dnorm(mu_tomaxf[a], tau_tomaxf)
+
+  mu_tominf[a] <- l + m * (trmin[a] - mean(trmin[1:nb6maj])) + n * (debmax[a] - mean(debmax[1:nb6maj]))
+
+  tominf[a] ~ dnorm(mu_tominf[a], tau_tominf)
+
+  dof[a] <- (tomaxf[a] - tominf[a]) / 2
+
+  bof[a] <- tominf[a] + dof[a]
+
+}
+
+# paramètres ajustement généraux
+
+tau_Teau3 ~ dgamma(0.001, 0.001) T(0.01, 10)
+
+tau_Teau3_ar <- tau_Teau3 / (1 - pow(tau_Teau3, 2))
+
+s_Teau3 <- sqrt(1 / tau_Teau3)
+
+tau_tomaxf <- 1 / pow(s_tomaxf, 2)#~ dgamma(0.001, 0.001) T(0.01, 10)
+
+s_tomaxf ~ dunif(0.01, 3) # <- sqrt(1 / tau_tomaxf)
+
+tau_tominf <- 1 / pow(s_tominf, 2) #~ dgamma(0.001, 0.001) T(0.01, 10)
+
+s_tominf ~ dunif(0.01, 3) #)<- sqrt(1 / tau_tominf)
+
+l ~ dnorm(6, 0.001)T(-44,56)
+
+m ~ dnorm(0, 0.001)T(-50,50)
+
+n ~ dnorm(0, 0.001)T(-50,50)
+
+o ~ dnorm(18, 0.001)T(-32,68)
+
+p ~ dnorm(0, 0.001)T(-50,50)
+
+q ~ dnorm(0, 0.001)T(-50,50)
+
+fof ~ dunif(50, 60)
+
+################################################################################
+####                        teau3p                                           ###
+################################################################################
+
+for(z in 1:n_per_100_ajp){
+
+  ### first out of the loop because of AR1 error
+
+  index_mean_ampl_03p_ajp[z] <- index_6[seq_1_ajp[z]]
+
+  Teau3p[seq_1_ajp[z]] ~ dnorm(mu_Teau3p_ac[seq_1_ajp[z]], tau_Teau3p)T(0, 40)
+
+  mu_Teau3p_ac[seq_1_ajp[z]] <- mu_Teau3p[seq_1_ajp[z]] + eps_o3p[seq_1_ajp[z]]
+
+  mu_Teau3p[seq_1_ajp[z]] <- bofp[index_mean_ampl_03p_ajp[z]] + dofp[index_mean_ampl_03p_ajp[z]] * sin(2 * 3.141593 * (seq_1_ajp[z] + fofp) / 73)
+
+  # eps and resid first time  
+  eps_o3p[seq_1_ajp[z]] <- 0
+
+  res_o3p[seq_1_ajp[z]] <- Teau3p[seq_1_ajp[z]] - mu_Teau3p[seq_1_ajp[z]]
+
+  res_o3p_ac[seq_1_ajp[z]] <- Teau3p[seq_1_ajp[z]] - mu_Teau3p_ac[seq_1_ajp[z]]
+
+  ### loop for rest of adj period
+
+  for (j in seq_2_ajp[z]:seq_100_ajp[z]){
+
+    Teau3p[j] ~ dnorm(mu_Teau3p_ac[j], tau_Teau3p_ar)T(0, 40)
+
+    mu_Teau3p_ac[j] <- mu_Teau3p[j] + eps_o3p[j]
+
+    mu_Teau3p[j] <- bofp[index_6[j]] + dofp[index_6[j]] * sin(2 * 3.141593 * (j + fofp) / 73)
+
+    eps_o3p[j] <- rho_o3p * res_o3p[j - 1]
+
+    res_o3p[j] <- Teau3p[j] - mu_Teau3p[j]
+
+    res_o3p_ac[j] <- Teau3p[j] - mu_Teau3p_ac[j]
+
+  }#j    
+
+}#n
+
+############################## projp section ##############################
+
+for(z in 1:n_per_100_projp){
+
+  ### first out of the loop because of AR1 error
+
+  index_mean_ampl_03p_projp[z] <- index_6[seq_1_projp[z]]
+
+  Teau3p[seq_1_projp[z]] ~ dnorm(mu_Teau3p_ac[seq_1_projp[z]], tau_Teau3p)T(0, 40)
+
+  mu_Teau3p_ac[seq_1_projp[z]] <- mu_Teau3p[seq_1_projp[z]] + eps_o3p[seq_1_projp[z]]
+
+  mu_Teau3p[seq_1_projp[z]] <- bofp[index_mean_ampl_03p_projp[z]] + dofp[index_mean_ampl_03p_projp[z]] * sin(2 * 3.141593 * (seq_1_projp[z] + fofp) / 73)
+
+  # eps and resid first time  
+  eps_o3p[seq_1_projp[z]] <- 0
+
+  res_o3p[seq_1_projp[z]] <- Teau3p[seq_1_projp[z]] - mu_Teau3p[seq_1_projp[z]]
+
+  res_o3p_ac[seq_1_projp[z]] <- Teau3p[seq_1_projp[z]] - mu_Teau3p_ac[seq_1_projp[z]]
+
+  ### loop for rest of projp period
+
+  for (j in seq_2_projp[z]:seq_100_projp[z]){
+
+    Teau3p[j] ~ dnorm(mu_Teau3p_ac[j], tau_Teau3p_ar)T(0, 40)
+
+    mu_Teau3p_ac[j] <- mu_Teau3p[j] + eps_o3p[j]
+
+    mu_Teau3p[j] <- bofp[index_6[j]] + dofp[index_6[j]] * sin(2 * 3.141593 * (j + fofp) / 73)
+
+    eps_o3p[j] <- rho_o3p * res_o3p[j - 1]
+
+    res_o3p[j] <- Teau3p[j] - mu_Teau3p[j]
+
+    res_o3p_ac[j] <- Teau3p[j] - mu_Teau3p_ac[j]
+
+  }#j    
+
+}#n
+
+###################### PRIORS ############################################
+
+rho_o3p ~ dunif(0, 1)
+
+for (a in 1:nb6maj){ #this loop include estimate for pred part
+
+#nb6mprojptot
+
+  mu_tomaxfp[a] <- op + pp * (trmax[a] - mean(trmax[1:nb6majp])) + qp * (debmin[a] - mean(debmin[1:nb6majp]))
+
+  tomaxfp[a] ~ dnorm(mu_tomaxfp[a], tau_tomaxfp)
+
+  mu_tominfp[a] <- lp + mp * (trmin[a] - mean(trmin[1:nb6majp])) + np * (debmax[a] - mean(debmax[1:nb6majp]))
+
+  tominfp[a] ~ dnorm(mu_tominfp[a], tau_tominfp)
+
+  dofp[a] <- (tomaxfp[a] - tominfp[a]) / 2
+
+  bofp[a] <- tominfp[a] + dofp[a]
+
+}
+
+# paramètres ajpustement généraux
+
+tau_Teau3p ~ dgamma(0.001, 0.001) T(0.01, 10)
+
+tau_Teau3p_ar <- tau_Teau3p / (1 - pow(tau_Teau3p, 2))
+
+s_Teau3p <- sqrt(1 / tau_Teau3p)
+
+tau_tomaxfp <- 1 / pow(s_tomaxfp, 2)
+
+s_tomaxfp ~ dunif(0.01, 3) 
+
+tau_tominfp <- 1 / pow(s_tominfp, 2) #~ dgamma(0.001, 0.001) T(0.01, 10)
+
+s_tominfp ~ dunif(0.01, 3) 
+
+lp ~ dnorm(6, 0.001)T(-44, 56)
+
+mp ~ dnorm(0, 0.001)T(-50, 50)
+
+np ~ dnorm(0, 0.001)T(-50, 50)
+
+op ~ dnorm(18, 0.001)T(-32, 68)
+
+pp ~ dnorm(0, 0.001)T(-50, 50)
+
+qp ~ dnorm(0, 0.001)T(-50, 50)
+
+fofp ~ dunif(50, 60)
+  
+################################################################################
+###                         chi2 test WT model                               ###
+################################################################################
+
+# Chi2 Teau3
+
+  for (j in 1:nbaaj * 73){
+
+       Chi_o3obs[j] <- pow(res_o3[j], 2) / pow(s_Teau3, 2)
+
+       Chi_o3rep[j] <- pow(res_o3rep[j], 2) / pow(s_Teau3, 2) 
+  }
+
+  sumChi_o3obs <- sum(Chi_o3obs[])
+
+  sumChi_o3rep <- sum(Chi_o3rep[])
+
+  test_o3 <- step(sumChi_o3obs - sumChi_o3rep)
+
+################################################################################
+###                          CALCUL DES RMSE                                 ###
+################################################################################
+
+for (j in (nbaajp * 73 + 1): (nbaaj*73)){
+
+  residuTeau3ppred[j] <- pow((Teau3[j] - Teau3p[j]), 2) * correc_Teaurmse[j]
+
+}
+  
+RMSETeau3ppred<-pow((sum(residuTeau3ppred[(nbaajp*73 +1) : (nbaaj * 73)]) / ((nbaaj - nbaajp) * 73 - nbNA_correc_Teaurmse)), 0.5)
+ 
+
+################################################################################
+###                   autocor in ts residuals                                ###
+################################################################################
+
+mean_res_r_ac <- mean(res_r_ac[1:nbaaj * 73])
+mean_res_o3_ac <- mean(res_o3_ac[1:nbaaj * 73])
+mean_res_d_ac <- mean(res_d_ac[1:nbaaj * 73])
+
+for (j in 1:(73*nbaaj-1)){
+
+  res_r_ac_cov_elts[j]<-(res_r_ac[j] - mean_res_r_ac) * (res_r_ac[j + 1] - mean_res_r_ac)# * correc_Tair[j] * correc_Tair[j + 1]
+  res_r_ac_0_sd_elts[j]<-pow((res_r_ac[j] - mean_res_r_ac), 2)# * correc_Tair[j] * correc_Tair[j + 1]
+  res_r_ac_1_sd_elts[j]<-pow((res_r_ac[j + 1] - mean_res_r_ac), 2)# * correc_Tair[j] * correc_Tair[j + 1]
+  
+  res_o3_ac_cov_elts[j]<-(res_o3_ac[j] - mean_res_o3_ac) * (res_o3_ac[j + 1] - mean_res_o3_ac)# * correc_Teau3[j] * correc_Teau3[j + 1]
+  res_o3_ac_0_sd_elts[j]<-pow((res_o3_ac[j] - mean_res_o3_ac), 2)#* correc_Teau3[j] * correc_Teau3[j + 1]
+  res_o3_ac_1_sd_elts[j]<-pow((res_o3_ac[j + 1] - mean_res_o3_ac), 2)#* correc_Teau3[j] * correc_Teau3[j + 1]
+  
+  res_d_ac_cov_elts[j]<-(res_d_ac[j] - mean_res_d_ac)*(res_d_ac[j + 1] - mean_res_d_ac)#* correc_LDeb[j] * correc_LDeb[j + 1]
+  res_d_ac_0_sd_elts[j]<-pow((res_d_ac[j] - mean_res_d_ac), 2)# * correc_LDeb[j] * correc_LDeb[j + 1]
+  res_d_ac_1_sd_elts[j]<-pow((res_d_ac[j + 1] - mean_res_d_ac), 2)# * correc_LDeb[j] * correc_LDeb[j + 1]
+     
+}#j
+
+autocor_r_ac <- sum(res_r_ac_cov_elts[]) / (pow(sum(res_r_ac_0_sd_elts[]), 0.5) * pow(sum(res_r_ac_1_sd_elts[]), 0.5))
+autocor_o3_ac <- sum(res_o3_ac_cov_elts[]) / (pow(sum(res_o3_ac_0_sd_elts[]), 0.5) * pow(sum(res_o3_ac_1_sd_elts[]), 0.5))
+autocor_d_ac <- sum(res_d_ac_cov_elts[]) / (pow(sum(res_d_ac_0_sd_elts[]), 0.5) * pow(sum(res_d_ac_1_sd_elts[]), 0.5))
+ 
+
+
+
+} #END MODEL
+  
+
