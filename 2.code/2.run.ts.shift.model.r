@@ -25,7 +25,7 @@ jags.inits.1 <- function(){
     "tau.at" = runif(1, 1 / (2 ^ 2), 1 / (0.5 ^ 2)),
     # flow
     "alpha.lfl" = quantile(lfl.data, probs = runif(1, 0.25, 0.75), na.rm = TRUE),
-    "beta.lfl" = (quantile(lfl.data, probs = 0.975, na.rm = TRUE) - quantile(lfl.data, probs = 0.025, na.rm = TRUE)) / 2 + rnorm(1, .2, 1),
+    "beta.lfl" = (quantile(lfl.data, probs = 0.975, na.rm = TRUE) - quantile(lfl.data, probs = 0.025, na.rm = TRUE)) / 2 + rnorm(1, .3, .3),
     "tau.lfl" = runif(1, 1 / (1 ^ 2), 1 / (.1 ^ 2))
   )
 }

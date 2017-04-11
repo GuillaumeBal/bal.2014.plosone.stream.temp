@@ -1,6 +1,6 @@
 jags.data.2 <- list(#'wt.data.s',
                     'at.data.s',
-                    #'lfl.data.s',
+                    'lfl.data.s',
                     'n.t.step.year', 
                     'ind.6m', 'n.6m.windows', 
                     'ac.period.cutoff', 'n.ac.periods',
@@ -9,10 +9,11 @@ jags.data.2 <- list(#'wt.data.s',
                     'n.sets.parameters', 'set'
 )
 
-jags.params.2 <- c('alpha.at', 'beta.at', 't0.at', 'sigma.at', 'rho.at')
+jags.params.2 <- c('alpha.at', 'beta.at', 't0.at', 'sigma.at', 'rho.at',
+                   'alpha.lfl', 'beta.lfl', 't0.lfl', 'sigma.lfl', 'rho.lfl')
 
 
-model.loc.2 <- "3.stream.temp.modeling/wt.ts.model.2.txt"
+model.loc.2 <- "3.stream.temp.modeling/wt.ts.model.3.txt"
 
 ### inits gen
 jags.inits.2 <- function(){
@@ -21,7 +22,12 @@ jags.inits.2 <- function(){
     "beta.at" = (quantile(at.data, probs = 0.975, na.rm = TRUE) - quantile(at.data, probs = 0.025, na.rm = TRUE)) / 2 + 
       rnorm(n.6m.windows, 1, 1),
     "tau.at" = rep(runif(1, 1 / (2 ^ 2), 1 / (0.5 ^ 2)), n.sets.parameters),
-    'rho.at' = runif(n.sets.parameters, 0.2, 0.6) * autocor.incl 
+    'rho.at' = runif(n.sets.parameters, 0.2, 0.6) * autocor.incl,
+    "alpha.lfl" = quantile(lfl.data, probs = runif(n.6m.windows, 0.25, 0.75), na.rm = TRUE),
+    "beta.lfl" = (quantile(lfl.data, probs = 0.975, na.rm = TRUE) - quantile(lfl.data, probs = 0.025, na.rm = TRUE)) / 2 + 
+      rnorm(n.6m.windows, .3, .3),
+    "tau.lfl" = rep(runif(1, 1 / (2 ^ 2), 1 / (0.5 ^ 2)), n.sets.parameters),
+    'rho.lfl' = runif(n.sets.parameters, 0.2, 0.6) * autocor.incl 
   )
 }
 
