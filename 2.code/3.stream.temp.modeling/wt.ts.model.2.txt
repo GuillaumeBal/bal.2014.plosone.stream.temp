@@ -1,0 +1,52 @@
+################################################################################
+# derived from modelled used for article on the 27/01/2014                     #
+################################################################################
+
+model {
+	
+################################################################################
+#                                  AIR                                         #
+################################################################################
+
+########################### PARTIE AJUSTEMENT  #################################
+
+# special definition of first at.ts data because of AR1 residuals
+
+for(a in 1:n.ac.periods){
+
+	for(t in ac.period.cutoff[1 + 2 * (a - 1)]){
+		at.data.s[t] ~ dnorm(mu.at[t] + 0, tau.at[set[t]])
+		mu.at[t] <- alpha.at[ind.6m[t]] + beta.at[ind.6m[t]] * sin(2 * pi.value * (t + t0.at) / n.t.step.year)
+		res.at[t] <- at.data.s[t] - mu.at[t]
+	}
+	
+	for(t in (ac.period.cutoff[1 + 2 * (a - 1)] + 1) : ac.period.cutoff[2 * a]){
+		at.data.s[t] ~ dnorm(mu.at[t] + rho.at[set[t]] * res.at[t - 1], tau.at.ac[set[t]])
+		mu.at[t] <- alpha.at[ind.6m[t]] + beta.at[ind.6m[t]] * sin(2 * pi.value * (t + t0.at) / n.t.step.year)
+		res.at[t] <- at.data.s[t] - mu.at[t]
+	}
+	
+}
+
+### PRIORS AT ---------------------------------------------------------------------------
+
+for(sm in 1:n.6m.windows){
+	alpha.at[sm] ~ dunif(5, 25) # make hierarchical or autoregressif if important gaps in data
+	beta.at[sm] ~  dunif(1,13) # make hierarchical or autoregressif if important gaps in data
+	min.at[sm] <- alpha.at[sm] - beta.at[sm]
+	max.at[sm] <- alpha.at[sm] + beta.at[sm]
+}
+
+t0.at ~ dunif(- n.t.step.year / 2, 0)
+
+# in case foracasting part deemed to have different values
+for(p in 1:n.sets.parameters){
+	rho.at[p] ~ dunif(0, rho.max)
+	tau.at[p] ~ dgamma(0.001, 0.001) T(0.01, 10)
+	sigma.at[p] <- sqrt(1 / tau.at[p])
+	tau.at.ac[p] <- tau.at[p] / (1 - pow(rho.at[p], 2))
+}
+
+} #END MODEL
+  
+

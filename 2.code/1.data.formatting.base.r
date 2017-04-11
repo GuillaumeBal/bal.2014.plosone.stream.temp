@@ -5,7 +5,7 @@ raw.data <- read.table(data.file, dec = '.', sep = ',', h = T)
 raw.data$date <- as.POSIXlt(raw.data$date, format = "%d/%m/%Y")
 
 # subet based on years chosen
-raw.data <- raw.data[- which(year(raw.data$date) < year.start | year(raw.data$date) > year.end), ]
+raw.data <- raw.data[- which(year(raw.data$date) < year.start | year(raw.data$date) > year.end.forecast), ]
 
 # check for negative water temperature and flow data
 #raw.data$water.temp[10] <- -1
@@ -77,8 +77,8 @@ if(time.step.option == 1){
   
   # time flow time series
   lfl.data <- log(sapply(1:length(cut.off.series), function(i){
-    ifelse(sum(!is.na(raw.data.minus.0229$water.temp[cut.off.series[i]:(cut.off.series[i] + 4)])) >= 2,
-           mean(raw.data.minus.0229$water.temp[cut.off.series[i]:(cut.off.series[i] + 4)], na.rm = TRUE),
+    ifelse(sum(!is.na(raw.data.minus.0229$flow[cut.off.series[i]:(cut.off.series[i] + 4)])) >= 2,
+           mean(raw.data.minus.0229$flow[cut.off.series[i]:(cut.off.series[i] + 4)], na.rm = TRUE),
            NA)
   }))
   

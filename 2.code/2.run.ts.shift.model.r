@@ -61,5 +61,5 @@ plot(at.data, type = 'l')
 lines(mean(alpha.at) + mean(beta.at) * sin(2 * pi * (1:length(at.data) + mean(t0.at)) / n.time.steps.year.1), 
       col = 'red')
 plot(lfl.data, type = 'l')
-lines(mean(alpha.lfl) + mean(beta.lfl) * sin(2 * pi * (1:length(lfl.data) + mean(lfl.data)) / n.time.steps.year.1), 
+lines(mean(alpha.lfl) - mean(beta.lfl) * sin(2 * pi * (1:length(lfl.data) + mean(t0.lfl)) / n.time.steps.year.1), 
       col = 'red')
