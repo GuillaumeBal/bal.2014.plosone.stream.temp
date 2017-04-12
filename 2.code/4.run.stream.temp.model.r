@@ -1,4 +1,4 @@
-jags.data.2 <- list(#'wt.data.s',
+jags.data.2 <- list('wt.data.s',
                     'at.data.s',
                     'lfl.data.s',
                     'n.t.step.year', 
@@ -10,10 +10,13 @@ jags.data.2 <- list(#'wt.data.s',
 )
 
 jags.params.2 <- c('alpha.at', 'beta.at', 't0.at', 'sigma.at', 'rho.at',
-                   'alpha.lfl', 'beta.lfl', 't0.lfl', 'sigma.lfl', 'rho.lfl')
+                   'alpha.lfl', 'beta.lfl', 't0.lfl', 'sigma.lfl', 'rho.lfl',
+                   'alpha.wt', 'beta.wt', 't0.wt', 'sigma.wt', 'rho.wt',
+                   'theta.0', 'theta.1', 'theta.2', 'theta.0.p', 'theta.1.p', 'theta.2.p',
+                   'sigma.max.wt', 'sigma.min.wt')
 
 
-model.loc.2 <- "3.stream.temp.modeling/wt.ts.model.3.txt"
+model.loc.2 <- "3.stream.temp.modeling/wt.ts.model.4.txt"
 
 ### inits gen
 jags.inits.2 <- function(){
@@ -46,5 +49,5 @@ attach.jags(jags.outputs.2)
 
 # visual check of Rhat values 
 hist(jags.outputs.2$BUGSoutput$summary[ ,'Rhat'], breaks = length(jags.params.2),
-     main = 'Rhat values, issue if values above 1.20')
-abline(v = 1.20, col = 'red')
+     main = 'Rhat values, issue if values above 1.10')
+abline(v = 1.10, col = 'red')
