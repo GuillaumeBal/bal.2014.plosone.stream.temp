@@ -24,8 +24,8 @@ data.formatted <- 0 # 0 no, 1 yes
 autocor.incl <- 1 # 0 for no, 1 for yes
 
 # mcmc param first model
-mcmc.burn.1 <- as.integer(5000)
-mcmc.length.1 <- as.integer(10000)  
+mcmc.burn.1 <- as.integer(3000)
+mcmc.length.1 <- as.integer(6000)  
 mcmc.thin.1 = 5
 mcmc.chains.1 = 3 # needs
 
