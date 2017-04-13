@@ -8,347 +8,142 @@ model {
 #                                  AIR                                         #
 ################################################################################
 
-########################### PARTIE AJUSTEMENT  #################################
-
 # special definition of first at.ts data because of AR1 residuals
 
-for(z in 1:n.per.100.aj){
+for(a in 1:n.ac.periods){
 
-  index.mean.ampl.r.aj[z] <- index.6[seq.1.aj[z]]
-		
-  Tair[seq.1.aj[z]] ~ dnorm(mu.Tair.ac[seq.1.aj[z]], tau.Tair.aj) T(-10, 40)
-
-  mu.Tair.ac[seq.1.aj[z]] <- mu.Tair[seq.1.aj[z]] + eps.r[seq.1.aj[z]]
-
-  mu.Tair[seq.1.aj[z]] <- br[index.mean.ampl.r.aj[z]] + dr[index.mean.ampl.r.aj[z]] * sin(2 * pi.value * (seq.1.aj[z] + fr.aj) / 73)
-
-  eps.r[seq.1.aj[z]] <- 0 # defined to allow model to work
-
-  res.r[seq.1.aj[z]] <- Tair[seq.1.aj[z]] - mu.Tair[seq.1.aj[z]]
-
-  res.r.ac[seq.1.aj[z]] <- Tair[seq.1.aj[z]] - mu.Tair.ac[seq.1.aj[z]]
-
-# rest of Tair time serie adjusted
+	for(t in ac.period.cutoff[1 + 2 * (a - 1)]){
+		at.data.s[t] ~ dnorm(mu.at[t] + 0, tau.at[set[t]])
+		mu.at[t] <- alpha.at[ind.6m[t]] + beta.at[ind.6m[t]] * sin(2 * pi.value * (t + t0.at) / n.t.step.year)
+		res.at[t] <- at.data.s[t] - mu.at[t]
+	}
 	
-  for (j in seq.2.aj[z]:seq.100.aj[z]){
-
-    Tair[j] ~ dnorm(mu.Tair.ac[j], tau.Tair.ar.aj)T(-10, 40)
-
-    mu.Tair.ac[j] <- mu.Tair[j]+ eps.r[j]
-
-    mu.Tair[j] <- br[index.6[j]] + dr[index.6[j]] * sin(2 * pi.value * (j + fr.aj) / 73)
-
-    eps.r[j] <- rho.r.aj * res.r[j-1]
-
-    res.r[j] <- Tair[j] - mu.Tair[j]
-
-    res.r.ac[j] <- Tair[j] - mu.Tair.ac[j]
-
-  }#n
-  
-}#j  
-
-########################### PARTIE SCENARIO CC #################################
-
-for(z in 1:n.per.100.proj){
-
-  index.mean.ampl.r.proj[z] <- index.6[seq.1.proj[z]]
-
-  Tair[seq.1.proj[z]] ~ dnorm(mu.Tair.ac[seq.1.proj[z]], tau.Tair.proj) T(-10, 40)
-
-  mu.Tair.ac[seq.1.proj[z]] <- mu.Tair[seq.1.proj[z]] + 0
-
-  mu.Tair[seq.1.proj[z]] <- br[index.mean.ampl.r.proj[z]] + dr[index.mean.ampl.r.proj[z]] * sin(2 * pi.value * (seq.1.proj[z] + fr.proj) / 73)
-
-# rest of Tair time serie adjusted
+	for(t in (ac.period.cutoff[1 + 2 * (a - 1)] + 1) : ac.period.cutoff[2 * a]){
+		at.data.s[t] ~ dnorm(mu.at[t] + rho.at[set[t]] * res.at[t - 1], tau.at.ac[set[t]])
+		mu.at[t] <- alpha.at[ind.6m[t]] + beta.at[ind.6m[t]] * sin(2 * pi.value * (t + t0.at) / n.t.step.year)
+		res.at[t] <- at.data.s[t] - mu.at[t]
+	}
 	
-  for (j in seq.2.proj[z]:seq.100.proj[z]){
-		
-    Tair[j] ~ dnorm(mu.Tair.ac[j], tau.Tair.ar.proj)T(-10, 40)
-
-    mu.Tair.ac[j] <- mu.Tair[j]  + rho.r.proj *(Tair[j-1] - mu.Tair[j-1])
-
-    mu.Tair[j] <- br[index.6[j]] + dr[index.6[j]] * sin(2 * pi.value * (j + fr.proj) / 73)    
-
-  }#n
-
-}#j  
-
-############################# PRIORS SECTION ###################################
-
-rho.r.aj ~ dunif(0, 1)
-
-rho.r.proj ~ dunif(0, 1)
-
-for (a in 1:nb6mprojtot){
-
-  br[a] ~ dnorm(13, 0.01)T(0, 26) # dnorm(br[a - 1], tau.br.aj)T(0, 26)
-
-  dr[a] ~  dnorm(6, 0.01)T(0, 12) #dnorm(dr[a - 1], tau.dr.aj)T(0, 12)
-
-  trmin[a] <- br[a] - dr[a]
-
-  trmax[a] <- br[a] + dr[a]
-
 }
 
-fr.aj ~ dunif(50, 60)
+### PRIORS AT ---------------------------------------------------------------------------
 
-fr.proj ~ dunif(50, 60)
-	
-tau.Tair.aj ~ dgamma(0.001, 0.001) T(0.01, 100)
-
-tau.Tair.proj ~ dgamma(0.001, 0.001) T(0.01, 100)
-
-s.Tair.aj <- sqrt(1 / tau.Tair.aj)
-
-s.Tair.proj <- sqrt(1 / tau.Tair.proj)
-
-tau.Tair.ar.aj <- tau.Tair.aj / (1 - pow(rho.r.aj, 2))
-
-tau.Tair.ar.proj <- tau.Tair.proj / (1 - pow(rho.r.proj, 2))
-
-################################################################################
-#####                     LDEB                                            ######
-################################################################################
-
-#### PARTIE AJUSTEMENT
-
-# special definition first Teau becasue of AR1 residuals
-
-for(z in 1:n.per.100.aj){
-
-  index.mean.ampl.d.aj[z] <- index.6[seq.1.aj[z]]
-
-  Ldeb[seq.1.aj[z]] ~ dnorm(mu.LDeb.ac[seq.1.aj[z]], tau.LDeb)T(-7, 10)
-
-  mu.LDeb.ac[seq.1.aj[z]] <- mu.LDeb[seq.1.aj[z]] + eps.d[seq.1.aj[z]]
-
-  mu.LDeb[seq.1.aj[z]] <- bd[index.mean.ampl.d.aj[z]] + dd[index.mean.ampl.d.aj[z]] * sin(2 * pi.value * (seq.1.aj[z] + fd) / 73)
-
-  eps.d[seq.1.aj[z]] <- 0
-
-  res.d[seq.1.aj[z]]<-LDeb[seq.1.aj[z]] - mu.LDeb[seq.1.aj[z]]
-
-  res.d.ac[seq.1.aj[z]]<-LDeb[seq.1.aj[z]] - mu.LDeb.ac[seq.1.aj[z]]
-
-  # rest of Teau time serie
-	
-  for (j in seq.2.aj[z]:seq.100.aj[z]){
-
-    LDeb[j] ~ dnorm(mu.LDeb.ac[j], tau.LDeb.ar)T(-7, 10)
-
-    mu.LDeb.ac[j] <- mu.LDeb[j] + eps.d[j]
-
-    mu.LDeb[j] <- bd[index.6[j]] + dd[index.6[j]] * sin(2 * pi.value * (j + fd) / 73)
-
-    eps.d[j] <- rho.d * res.d[j - 1]
-
-    res.d[j] <- LDeb[j] - mu.LDeb[j]
-
-    res.d.ac[j] <- LDeb[j] - mu.LDeb.ac[j]
-
-  }#j
-  
-}#n                             
-
-# prior Teau time serie decomposition
-	
-rho.d ~ dunif(0, 1)
-
-for (a in 1:nb6maj){
-
-  bd[a] ~ dnorm(1, 0.01)T(-3, 3)#dnorm(bd[a - 1], tau.bd)T(-3, 3)
-
-  dd[a] ~ dunif(0, 3)#dnorm(dd[a-1], tau.dd)T(-3, 3)
-  
-  debmax[a] <- bd[a] + dd[a]
-
-  debmin[a]<- bd[a] - dd[a]
-
+for(sm in 1:n.6m.windows){
+	alpha.at[sm] ~ dunif(5, 25) # make hierarchical or autoregressif if important gaps in data
+	beta.at[sm] ~  dunif(1,13) # make hierarchical or autoregressif if important gaps in data
+	min.at[sm] <- alpha.at[sm] - beta.at[sm]
+	max.at[sm] <- alpha.at[sm] + beta.at[sm]
 }
 
-fd ~ dunif(13, 23)
-	
-tau.LDeb ~ dgamma(0.01, 0.01) T(0.05, 100)
+t0.at ~ dunif(- n.t.step.year / 2, 0)
 
-s.LDeb <- sqrt(1 / tau.LDeb)
-
-tau.LDeb.ar <- tau.LDeb / (1- pow(rho.d, 2))
-
-### pred part
-
-for (a in nb6majplus1:nb6mprojtot){
-
-  bd[a]<-mean(bd[1:nb6maj])
-
-	dd[a]<-mean(dd[1:nb6maj])
-		
-	debmax[a]<-bd[a]+dd[a]
-
-  debmin[a]<-bd[a]-dd[a]
-
+# in case foracasting part deemed to have different values
+for(p in 1:n.sets.parameters){
+	rho.at[p] ~ dunif(0, rho.max)
+	tau.at[p] ~ dgamma(0.001, 0.001) T(0.01, 10)
+	sigma.at[p] <- sqrt(1 / tau.at[p])
+	tau.at.ac[p] <- tau.at[p] / (1 - pow(rho.at[p], 2))
 }
 
 ################################################################################
-####                        teau3                                            ###
+#                                  flow                                        #
 ################################################################################
 
-for(z in 1:n.per.100.aj){
+# special definition of first lfl.ts data because of AR1 residuals
 
-  ### first out of the loop because of AR1 error
+for(a in 1:n.ac.periods){
 
-  index.mean.ampl.03.aj[z] <- index.6[seq.1.aj[z]]
-
-  Teau3[seq.1.aj[z]] ~ dnorm(mu.Teau3.ac[seq.1.aj[z]], tau.Teau3)T(0, 40)
-
-  mu.Teau3.ac[seq.1.aj[z]] <- mu.Teau3[seq.1.aj[z]] + eps.o3[seq.1.aj[z]]
-
-  mu.Teau3[seq.1.aj[z]] <- bof[index.mean.ampl.03.aj[z]] + dof[index.mean.ampl.03.aj[z]] * sin(2 * pi.value * (seq.1.aj[z] + fof) / 73)
-
-  # eps and resid first time  
-  eps.o3[seq.1.aj[z]] <- 0
-
-  res.o3[seq.1.aj[z]] <- Teau3[seq.1.aj[z]] - mu.Teau3[seq.1.aj[z]]
-
-  res.o3.ac[seq.1.aj[z]] <- Teau3[seq.1.aj[z]] - mu.Teau3.ac[seq.1.aj[z]]
-
-  # replicat
-
-  Teau3rep[seq.1.aj[z]] ~ dnorm(mu.Teau3rep.ac[seq.1.aj[z]], tau.Teau3)T(0, 40)
-
-  mu.Teau3rep.ac[seq.1.aj[z]] <-  mu.Teau3rep[seq.1.aj[z]] + eps.o3rep[seq.1.aj[z]]
-
-  mu.Teau3rep[seq.1.aj[z]] <- bof[index.mean.ampl.03.aj[z]] + dof[index.mean.ampl.03.aj[z]] * sin(2 * pi.value * (seq.1.aj[z] + fof) / 73)
-
-  eps.o3rep[seq.1.aj[z]] <- 0
-
-  res.o3rep[seq.1.aj[z]] <- Teau3rep[seq.1.aj[z]] - mu.Teau3rep[seq.1.aj[z]]
-
-  ### loop for rest of adj period
-
-  for (j in seq.2.aj[z]:seq.100.aj[z]){
-
-    Teau3[j] ~ dnorm(mu.Teau3.ac[j], tau.Teau3.ar)T(0, 40)
-
-    mu.Teau3.ac[j] <- mu.Teau3[j] + eps.o3[j]
-
-    mu.Teau3[j] <- bof[index.6[j]] + dof[index.6[j]] * sin(2 * pi.value * (j + fof) / 73)
-
-    eps.o3[j] <- rho.o3 * res.o3[j - 1]
-
-    res.o3[j] <- Teau3[j] - mu.Teau3[j]
-
-    res.o3.ac[j] <- Teau3[j] - mu.Teau3.ac[j]
-
-    # replicat
-
-    Teau3rep[j] ~ dnorm(mu.Teau3rep.ac[j],tau.Teau3.ar)T(0,40)
-
-    mu.Teau3rep.ac[j] <- mu.Teau3rep[j] + eps.o3rep[j]
-
-	  mu.Teau3rep[j] <- bof[index.6[j]] + dof[index.6[j]] * sin(2 * pi.value * (j + fof) / 73)
-
-    eps.o3rep[j] <- rho.o3 * res.o3rep[j-1]
-
-    res.o3rep[j] <- Teau3rep[j] - mu.Teau3rep[j]
-
-  }#j    
-
-}#n
-
-############################## proj section ##############################
-
-for(z in 1:n.per.100.proj){
-
-  ### first out of the loop because of AR1 error
-
-  index.mean.ampl.03.proj[z] <- index.6[seq.1.proj[z]]
-
-  Teau3[seq.1.proj[z]] ~ dnorm(mu.Teau3.ac[seq.1.proj[z]], tau.Teau3)T(0, 40)
-
-  mu.Teau3.ac[seq.1.proj[z]] <- mu.Teau3[seq.1.proj[z]] + eps.o3[seq.1.proj[z]]
-
-  mu.Teau3[seq.1.proj[z]] <- bof[index.mean.ampl.03.proj[z]] + dof[index.mean.ampl.03.proj[z]] * sin(2 * pi.value * (seq.1.proj[z] + fof) / 73)
-
-  # eps and resid first time  
-  eps.o3[seq.1.proj[z]] <- 0
-
-  res.o3[seq.1.proj[z]] <- Teau3[seq.1.proj[z]] - mu.Teau3[seq.1.proj[z]]
-
-  res.o3.ac[seq.1.proj[z]] <- Teau3[seq.1.proj[z]] - mu.Teau3.ac[seq.1.proj[z]]
-
-  ### loop for rest of proj period
-
-  for (j in seq.2.proj[z]:seq.100.proj[z]){
-
-    Teau3[j] ~ dnorm(mu.Teau3.ac[j], tau.Teau3.ar)T(0, 40)
-
-    mu.Teau3.ac[j] <- mu.Teau3[j] + eps.o3[j]
-
-    mu.Teau3[j] <- bof[index.6[j]] + dof[index.6[j]] * sin(2 * pi.value * (j + fof) / 73)
-
-    eps.o3[j] <- rho.o3 * res.o3[j - 1]
-
-    res.o3[j] <- Teau3[j] - mu.Teau3[j]
-
-    res.o3.ac[j] <- Teau3[j] - mu.Teau3.ac[j]
-
-  }#j    
-
-}#n
-
-###################### PRIORS ############################################
-
-rho.o3 ~ dunif(0, 1)
-
-for (a in 1:nb6mprojtot){ #this loop include estimate for pred part, de
-
-#nb6mprojtot
-
-  mu.tomaxf[a] <- o + p * (trmax[a] - mean(trmax[1:nb6maj])) + q * (debmin[a] - mean(debmin[1:nb6maj]))
-
-  tomaxf[a] ~ dnorm(mu.tomaxf[a], tau.tomaxf)
-
-  mu.tominf[a] <- l + m * (trmin[a] - mean(trmin[1:nb6maj])) + n * (debmax[a] - mean(debmax[1:nb6maj]))
-
-  tominf[a] ~ dnorm(mu.tominf[a], tau.tominf)
-
-  dof[a] <- (tomaxf[a] - tominf[a]) / 2
-
-  bof[a] <- tominf[a] + dof[a]
-
+	for(t in ac.period.cutoff[1 + 2 * (a - 1)]){
+		lfl.data.s[t] ~ dnorm(mu.lfl[t] + 0, tau.lfl[set[t]])
+		mu.lfl[t] <- alpha.lfl[ind.6m[t]] + beta.lfl[ind.6m[t]] * sin(2 * pi.value * (t + t0.lfl) / n.t.step.year)
+		res.lfl[t] <- lfl.data.s[t] - mu.lfl[t]
+	}
+	
+	for(t in (ac.period.cutoff[1 + 2 * (a - 1)] + 1) : ac.period.cutoff[2 * a]){
+		lfl.data.s[t] ~ dnorm(mu.lfl[t] + rho.lfl[set[t]] * res.lfl[t - 1], tau.lfl.ac[set[t]])
+		mu.lfl[t] <- alpha.lfl[ind.6m[t]] - beta.lfl[ind.6m[t]] * sin(2 * pi.value * (t + t0.lfl) / n.t.step.year) # sign minus because of inverse frequency with temp data
+		res.lfl[t] <- lfl.data.s[t] - mu.lfl[t]
+	}
+	
 }
 
-# paramètres ajustement généraux
+### PRIORS LFL ---------------------------------------------------------------------------
 
-tau.Teau3 ~ dgamma(0.001, 0.001) T(0.01, 10)
+for(sm in 1:n.6m.windows){
+	alpha.lfl[sm] ~ dunif(0.1, 4) # make hierarchical or autoregressif if important gaps in data
+	beta.lfl[sm] ~  dunif(0.01, 4) # make hierarchical or autoregressif if important gaps in data
+	min.lfl[sm] <- alpha.lfl[sm] - beta.lfl[sm]
+	max.lfl[sm] <- alpha.lfl[sm] + beta.lfl[sm]
+}
 
-tau.Teau3.ar <- tau.Teau3 / (1 - pow(tau.Teau3, 2))
+t0.lfl ~ dunif(- n.t.step.year / 2, 0)
 
-s.Teau3 <- sqrt(1 / tau.Teau3)
+# in case foracasting part deemed to have different values
+for(p in 1:n.sets.parameters){
+	rho.lfl[p] ~ dunif(0, rho.max)
+	tau.lfl[p] ~ dgamma(0.001, 0.001) T(0.01, 10)
+	sigma.lfl[p] <- sqrt(1 / tau.lfl[p])
+	tau.lfl.ac[p] <- tau.lfl[p] / (1 - pow(rho.lfl[p], 2))
+}
 
-tau.tomaxf <- 1 / pow(s.tomaxf, 2)#~ dgamma(0.001, 0.001) T(0.01, 10)
+################################################################################
+#                                water temperature                             #
+################################################################################
 
-s.tomaxf ~ dunif(0.01, 3) # <- sqrt(1 / tau.tomaxf)
+# special definition of first lfl.ts data because of AR1 residuals
 
-tau.tominf <- 1 / pow(s.tominf, 2) #~ dgamma(0.001, 0.001) T(0.01, 10)
+for(a in 1:n.ac.periods){
 
-s.tominf ~ dunif(0.01, 3) #)<- sqrt(1 / tau.tominf)
+	for(t in ac.period.cutoff[1 + 2 * (a - 1)]){
+		wt.data.s[t] ~ dnorm(mu.wt[t] + 0, tau.wt[set[t]])
+		mu.wt[t] <- alpha.wt[ind.6m[t]] + beta.wt[ind.6m[t]] * sin(2 * pi.value * (t + t0.wt) / n.t.step.year)
+		res.wt[t] <- wt.data.s[t] - mu.wt[t]
+	}
+	
+	for(t in (ac.period.cutoff[1 + 2 * (a - 1)] + 1) : ac.period.cutoff[2 * a]){
+		wt.data.s[t] ~ dnorm(mu.wt[t] + rho.wt[set[t]] * res.wt[t - 1], tau.wt.ac[set[t]])
+		mu.wt[t] <- alpha.wt[ind.6m[t]] + beta.wt[ind.6m[t]] * sin(2 * pi.value * (t + t0.wt) / n.t.step.year)
+		res.wt[t] <- wt.data.s[t] - mu.wt[t]
+	}
+	
+}
 
-l ~ dnorm(6, 0.001)T(-44,56)
+### PRIORS LFL ---------------------------------------------------------------------------
 
-m ~ dnorm(0, 0.001)T(-50,50)
+for(sm in 1:n.6m.windows){
+	alpha.wt[sm] <- (max.wt[sm] + min.wt[sm]) / 2
+	beta.wt[sm] <- (max.wt[sm] - min.wt[sm]) / 2
+	min.wt[sm] ~ dnorm(mu.min.wt[sm], tau.min.wt)
+	max.wt[sm] ~ dnorm(mu.max.wt[sm], tau.max.wt)
+	mu.max.wt[sm] <- theta.0 + 
+					 theta.1 * (max.at[sm] - mean(max.at[])) + # centered to help faster convergence
+					 theta.2 * (min.lfl[sm] - mean(min.lfl[]))
+	mu.min.wt[sm] <- theta.0.p + 
+					 theta.1.p * (min.at[sm] - mean(min.at[])) + 
+					 theta.2.p * (max.lfl[sm] - mean(max.lfl[]))
+}
 
-n ~ dnorm(0, 0.001)T(-50,50)
+theta.0 ~ dnorm(18, 0.01)T(8, 28) # shoudn't be negative
+theta.1 ~ dnorm(0, 0.01)T(-10, 10)
+theta.2  ~ dnorm(0, 0.01)T(-10, 10)
+theta.0.p ~ dnorm(6, 0.01)T(0, 14)
+theta.1.p  ~ dnorm(0, 0.01)T(-10, 10)
+theta.2.p  ~ dnorm(0, 0.01)T(-10, 10)
 
-o ~ dnorm(18, 0.001)T(-32,68)
+tau.max.wt <- 1 / pow(sigma.max.wt, 2)#~ dgamma(0.001, 0.001) T(0.01, 10)
+sigma.max.wt ~ dunif(0.01, 3)
+tau.min.wt <- 1 / pow(sigma.min.wt, 2)#~ dgamma(0.001, 0.001) T(0.01, 10)
+sigma.min.wt ~ dunif(0.01, 3)
 
-p ~ dnorm(0, 0.001)T(-50,50)
+t0.wt ~ dunif(- n.t.step.year / 2, 0)
 
-q ~ dnorm(0, 0.001)T(-50,50)
-
-fof ~ dunif(50, 60)
+# in case foracasting part deemed to have different values
+for(p in 1:n.sets.parameters){
+	rho.wt[p] ~ dunif(0, rho.max)
+	tau.wt[p] ~ dgamma(0.001, 0.001) T(0.01, 10)
+	sigma.wt[p] <- sqrt(1 / tau.wt[p])
+	tau.wt.ac[p] <- tau.wt[p] / (1 - pow(rho.wt[p], 2))
+}
 
 } #END MODEL
   

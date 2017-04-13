@@ -1,10 +1,10 @@
 # load time series used before
-data.ts <- read.table('time.series.data.1.txt', h = T)
+data.ts <- read.table('1.data/formatted.time.series.1.txt', h = T)
 attach(data.ts)
 date <- as.POSIXlt(date)
 
 # read information about how to t0 data
-t0.data <- read.table('ts.shift.outputs.txt', h = T)
+t0.data <- read.table('2.ts.shift.estimates/jags.fit.details/0.param.summary.txt', h = T)
 
 # extract values
 t0.series <- round(t0.data[which(substring(rownames(t0.data), 1, 2) == 't0'), 5], 2)

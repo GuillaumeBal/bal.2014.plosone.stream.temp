@@ -100,4 +100,5 @@ plot(lfl.data, type = 'l')
 
 # save time series
 write.table(cbind(date = as.character(raw.data$date[cut.off.series[1:n.time.steps.1 %% 2 != 0]]), 
-                  wt.data = wt.data, at.data = at.data, lfl.data = lfl.data), 'time.series.data.1.txt')
+                  wt.data = wt.data, at.data = at.data, lfl.data = lfl.data), 
+            file = '1.data/formatted.time.series.1.txt')

@@ -1,7 +1,7 @@
 ##############################################
 # ignore specific to the project
 
-jags_results/
+jags.fit.details/
 #biblio/
 
 ##############################################

@@ -63,3 +63,56 @@ lines(mean(alpha.at) + mean(beta.at) * sin(2 * pi * (1:length(at.data) + mean(t0
 plot(lfl.data, type = 'l')
 lines(mean(alpha.lfl) - mean(beta.lfl) * sin(2 * pi * (1:length(lfl.data) + mean(t0.lfl)) / n.time.steps.year.1), 
       col = 'red')
+
+
+# more checks and save ----------------------------------------------------------------------------------
+
+save.folder.1 <- '2.ts.shift.estimates/jags.fit.details/'
+dir.create(save.folder.1)
+
+write.table(jags.outputs.1$BUGSoutput$summary, file = paste0(save.folder.1, "0.param.summary.txt"))
+
+list.var.1 <- c(dimnames(jags.outputs.1$BUGSoutput$sims.array)[3])[[1]] #list des var
+list.var.1 <- gsub("[^[:alnum:]]", "", list.var.1)
+
+for (i in 1:dim(jags.outputs.1$BUGSoutput$sims.array)[3]){
+  assign(paste0(list.var.1[i], "1"), mcmc(jags.outputs.1$BUGSoutput$sims.array[ , 1, i]))
+  assign(paste0(list.var.1[i], "2"), mcmc(jags.outputs.1$BUGSoutput$sims.array[ , 2, i]))
+  assign(paste0(list.var.1[i], "3"), mcmc(jags.outputs.1$BUGSoutput$sims.array[ , 3, i]))
+  assign(list.var.1[i], mcmc.list(list(eval(parse(text = paste0(list.var.1[i], "1"))), 
+                                     eval(parse(text = paste0(list.var.1[i], "2"))),
+                                     eval(parse(text = paste0(list.var.1[i], "3"))))))
+  write.table(eval(parse(text = paste0(list.var.1[i], "3"))),file = paste0(save.folder.1, list.var.1[i], ".txt"))
+  #uncomment previous line if you wanna store mcmc chain
+}
+
+### list.var.1 minus residuals, dont' include rsiduals in the following to get bayesian diagnoses figures quicker
+list.var.1.minus.res <- list.var.1[which(substring(list.var.1, 1, 3) != 'res')]
+
+### trace gelman plot and save in a pdf
+pdf(file = paste0(save.folder.1, "/bgr.pdf"), onefile = TRUE, height = 8.25, width = 11.6)
+for (i in 1:length(list.var.1.minus.res)){
+  gelman.plot(eval(parse(text = list.var.1.minus.res[i])), main = list.var.1.minus.res[i])
+}
+dev.off()
+
+### trace autocor plot and save in a pdf
+pdf(file= paste0(save.folder.1, "/ac.pdf"), onefile = TRUE, height = 8.25, width = 11.6)
+for (i in 1:dim(jags.outputs.1$BUGSoutput$sims.array)[3]){
+  autocorr.plot(eval(parse(text = list.var.1[i])),main = list.var.1[i])
+}
+dev.off()
+
+#trace density plot and save in a pdf
+pdf(file = paste0(save.folder.1, "/density.pdf"), onefile=TRUE, height = 8.25, width = 11.6)
+for (i in 1:dim(jags.outputs.1$BUGSoutput$sims.array)[3]){
+  densplot(eval(parse(text = list.var.1[i])), main = list.var.1[i])
+}
+dev.off()
+
+#trace history plot and save in a pdf
+pdf(file = paste0(save.folder.1, "/history.pdf"), onefile = TRUE, height = 8.25, width = 11.6)
+for (i in 1:dim(jags.outputs.1$BUGSoutput$sims.array)[3]){
+  traceplot(eval(parse(text = list.var.1[i])),main = list.var.1[i])
+}
+dev.off()

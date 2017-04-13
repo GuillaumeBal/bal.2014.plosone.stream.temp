@@ -5,7 +5,7 @@ wd <- "C:/Users/gbal/Desktop/bal.2014.plosone.stream.temp/2.code"
 setwd(wd)
 
 # data file to use
-data.file <- '1.raw.data/scorff.river.data.csv'
+data.file <- '1.data/scorff.river.data.csv'
 
 # define first and last year
 year.start <- 1995 # including hindcasting
