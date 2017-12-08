@@ -6,6 +6,6 @@ Data from the Scorff river used for the example within this github folder are pr
 - the experimental unit U3E INRA 1036, https://www6.rennes.inra.fr/u3e/PRESENTATION
 - http://hydro.eaufrance.fr/
 
-Please refer to these links before doing any further used of the data provided.
-If data were to beu sed in any publication, please get in touch with the people managing these data and cite the sources
+Please refer to these links before doing any further use of the data provided.
+If data were to be used in any publication, please get in touch with the people managing these data and cite the sources.
   
