@@ -18,7 +18,7 @@ t0.values <- round(c(-t0.series - centering.sin.values[time.step.option]), 0)
 
 # t0 time series for model
 wt.data.s <- c(wt.data[(t0.values[3] + 1) : length(wt.data)], rep(NA, t0.values[3]))
-at.data.s <- c(at.data[(t0.values[1] + 1) : length(at.data)], rep(NA, t0.values[3]))
+at.data.s <- c(at.data[(t0.values[1] + 1) : length(at.data)], rep(NA, t0.values[1]))
 lfl.data.s <- c(lfl.data[(t0.values[2] + 1) : length(lfl.data)], rep(NA, t0.values[2]))
 
 # 1 or two sets param because forecasting assumed to differ
