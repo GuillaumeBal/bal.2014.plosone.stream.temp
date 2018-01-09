@@ -5,7 +5,10 @@ raw.data <- read.table(data.file, dec = '.', sep = ',', h = T)
 raw.data$date <- as.POSIXlt(raw.data$date, format = "%d/%m/%Y")
 
 # subet based on years chosen
-raw.data <- raw.data[- which(year(raw.data$date) < year.start | year(raw.data$date) > year.end.forecast), ]
+#raw.data <- raw.data[- which(year(raw.data$date) < year.start | year(raw.data$date) > year.end.forecast), ]
+if(any(year(raw.data$date) < year.start | year(raw.data$date) > year.end.forecast)){
+  raw.data <- raw.data[-which(year(raw.data$date) < year.start | year(raw.data$date) > year.end.forecast), ]
+}
 
 # check for negative water temperature and flow data
 #raw.data$water.temp[10] <- -1
@@ -57,8 +60,14 @@ if(time.step.option == 1){
   
 }else{
   
-  bissex.suppress <- which(substring(as.character(raw.data$date), 6, 10) == '02-29')
-  raw.data.minus.0229 <- raw.data[-bissex.suppress, ]
+  #bissex.suppress <- which(substring(as.character(raw.data$date), 6, 10) == '02-29')
+  #raw.data.minus.0229 <- raw.data[-bissex.suppress, ]
+  if(any(substring(as.character(raw.data$date), 6, 10) == '02-29')){
+    bissex.suppress <- which(substring(as.character(raw.data$date), 6, 10) == '02-29')
+    raw.data.minus.0229 <- raw.data[-bissex.suppress, ]
+  }else{
+    raw.data.minus.0229 <- raw.data
+  }
   cut.off.series <- seq(1, dim(raw.data.minus.0229)[1], 5)
   
   # water temperature time series
