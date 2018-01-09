@@ -1,7 +1,14 @@
 rm(list = ls())
 
+# package to automatically update working directory
+here.intalled <- require(here)
+if(here.intalled == FALSE){
+  install.packages('here')
+}
+library(here)
+
 # define and set working directory
-wd <- "C:/Users/gbal/Desktop/bal.2014.plosone.stream.temp/2.code"
+wd <- here::here()
 setwd(wd)
 
 # data file to use
